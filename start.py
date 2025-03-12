@@ -5,15 +5,19 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.'))
 import threading
 import time
 from looper.loopstation import LoopStation
-from looper.keyboard_control import keyboard_control
 
 def main():
     loop_station = LoopStation(bpm=120, beats_per_loop=8)
     
-    # Start keyboard control thread
-    kb_thread = threading.Thread(target=keyboard_control, args=(loop_station,))
-    kb_thread.daemon = True
-    kb_thread.start()
+    # Start keyboard control thread with try/except handling
+    try:
+        from looper import keyboard_control
+        kb_thread = threading.Thread(target=keyboard_control.keyboard_control, args=(loop_station,))
+        kb_thread.daemon = True
+        kb_thread.start()
+        print("Keyboard control enabled")
+    except ImportError:
+        print("keyboard_control not available")
     
     # Try to start GPIO control if available
     try:
