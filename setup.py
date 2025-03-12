@@ -11,7 +11,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "looper=looper.loopstation:main"
+            "looper=start:main"  # changed entry point to start:main
         ]
     }
 )

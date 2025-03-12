@@ -154,6 +154,13 @@ class LoopStation:
         self.loop_duration = 60 / self.bpm * self.beats_per_loop
         print(f"BPM changed to {new_bpm}")
     
+    def clear_recordings(self):
+        """Clear all recordings from the tracks"""
+        for i in range(3):
+            self.tracks[i] = np.zeros(self.loop_samples, dtype=np.float32)
+            self.track_active[i] = False
+        print("All recordings cleared")
+
     def shutdown(self):
         """Clean shutdown of the loop station"""
         self.is_running = False
@@ -164,60 +171,3 @@ class LoopStation:
         self.stream.close()
         self.p.terminate()
         print("Loop station shut down")
-
-def keyboard_control(loop_station):
-    """Handle keyboard controls for the loop station using a key-action map"""
-    print("\n=== PYTHON LOOP STATION ===")
-    print(f"BPM: {loop_station.bpm}, Beats per loop: {loop_station.beats_per_loop}")
-    print("\nKEYBOARD CONTROLS:\n1-3: Record tracks\nQ/W/E: Toggle tracks\nSPACE: Stop recording\n+/-: Adjust BPM\nM: Toggle metronome\nESC: Quit\n")
-    
-    key_actions = {
-        '1': lambda: loop_station.start_recording(0),
-        '2': lambda: loop_station.start_recording(1),
-        '3': lambda: loop_station.start_recording(2),
-        'q': lambda: loop_station.toggle_track(0),
-        'w': lambda: loop_station.toggle_track(1),
-        'e': lambda: loop_station.toggle_track(2),
-        'space': lambda: loop_station.stop_recording(),
-        '+': lambda: loop_station.change_bpm(loop_station.bpm + 5),
-        '=': lambda: loop_station.change_bpm(loop_station.bpm + 5),
-        '-': lambda: loop_station.change_bpm(max(60, loop_station.bpm - 5)),
-        'm': lambda: loop_station.toggle_metronome(),
-        'esc': lambda: (print("Shutting down..."), loop_station.shutdown())
-    }
-    
-    while loop_station.is_running:
-        time.sleep(0.05)
-        for key, action in key_actions.items():
-            if keyboard.is_pressed(key):
-                action()
-                time.sleep(0.2)
-                break
-
-def main():
-    try:
-        # Create and start the loop station with 120 BPM and 16 beats per loop
-        loop_station = LoopStation(bpm=120, beats_per_loop=8)
-        
-        # Start the keyboard control thread
-        keyboard_thread = threading.Thread(target=keyboard_control, args=(loop_station,))
-        keyboard_thread.daemon = True
-        keyboard_thread.start()
-        
-        # Keep the main thread alive until the user quits
-        while loop_station.is_running:
-            time.sleep(0.1)
-    
-    except KeyboardInterrupt:
-        print("\nProgram interrupted by user")
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        # Make sure we clean up properly
-        try:
-            loop_station.shutdown()
-        except:
-            pass
-
-if __name__ == "__main__":
-    main()
