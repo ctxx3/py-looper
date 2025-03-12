@@ -9,12 +9,12 @@ from gpiozero import Button, LED
 
 def gpio_control(loop_station):
     try:
-        # Setup Buttons
-        btn_track1 = Button(5)
-        btn_track2 = Button(6)
-        btn_track3 = Button(13)
-        btn_stop   = Button(19)  # Now used to clear recordings
-        btn_metro  = Button(26)
+        # Setup Buttons with debounce
+        btn_track1 = Button(5, bounce_time=0.1)
+        btn_track2 = Button(6, bounce_time=0.1)
+        btn_track3 = Button(13, bounce_time=0.1)
+        btn_stop   = Button(19, bounce_time=0.1)
+        btn_metro  = Button(26, bounce_time=0.1)
         # Setup LEDs
         led_record = LED(20)
         led_metro  = LED(21)
