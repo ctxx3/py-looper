@@ -41,6 +41,13 @@ def main():
     except ImportError:
         print("gpio_control not available")
     
+    # Web control
+    try:
+        from looper import web_control
+        start_control_thread("Web control", web_control.web_control, loop_station)
+    except ImportError:
+        print("web_control not available")
+    
     # Run until loop_station stops
     while loop_station.is_running:
         time.sleep(0.1)

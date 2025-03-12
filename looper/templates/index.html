@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Looper Web Control</title>
+    <style>
+        /* Dark mode mobile-first styling */
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', 'Arial', sans-serif;
+            background: #16213e;
+            height: 100%;
+            color: #ffffff;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(0deg, #1a1a2e, #16213e);
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            z-index: 1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        form {
+            background: rgba(20, 20, 30, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .button-group {
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .button-group.two-col { grid-template-columns: 1fr 1fr; }
+        .button-group.full-width { grid-template-columns: 1fr; }
+
+        .group-label {
+            grid-column: 1 / -1;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            text-align: left;
+            margin: 4px 0 8px 0;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 500;
+        }
+
+        button {
+            background: rgba(20, 20, 30, 0.8);
+            border: 2px solid transparent;
+            color: #ffffff;
+            padding: 12px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 50px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover { transform: translateY(-2px); }
+        button:active { transform: scale(0.97); }
+        
+        button.record { border-color: rgba(231, 76, 60, 0.7); }
+        button.record:hover { background: rgba(231, 76, 60, 0.15); }
+        
+        button.toggle { border-color: rgba(52, 152, 219, 0.7); }
+        button.toggle:hover { background: rgba(52, 152, 219, 0.15); }
+        
+        button.control { border-color: rgba(46, 204, 113, 0.7); }
+        button.control:hover { background: rgba(46, 204, 113, 0.15); }
+        
+        button.danger { border-color: rgba(231, 76, 60, 0.7); }
+        button.danger:hover { background: rgba(231, 76, 60, 0.15); }
+
+        /* .active {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-width: 3px !important;
+        } */
+
+        #status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            height: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        #status.visible { opacity: 1; }
+
+        @media (max-height: 700px) {
+            body { padding-top: 10px; }
+            h1 { margin: 10px 0; font-size: 1.6rem; }
+            button { min-height: 45px; padding: 8px; }
+            .button-group { margin-bottom: 10px; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 data-text="Looper">Looper</h1>
+        <form id="looperForm">
+            <div class="button-group">
+                <span class="group-label">Recording</span>
+                <button type="button" data-command="record1" class="record">Track 1</button>
+                <button type="button" data-command="record2" class="record">Track 2</button>
+                <button type="button" data-command="record3" class="record">Track 3</button>
+            </div>
+
+            <div class="button-group">
+                <span class="group-label">Playback</span>
+                <button type="button" data-command="toggle1" class="toggle">Toggle 1</button>
+                <button type="button" data-command="toggle2" class="toggle">Toggle 2</button>
+                <button type="button" data-command="toggle3" class="toggle">Toggle 3</button>
+            </div>
+
+            <div class="button-group full-width">
+                <button type="button" data-command="stop" class="danger">Stop Recording</button>
+            </div>
+
+            <div class="button-group two-col">
+                <span class="group-label">Tempo</span>
+                <button type="button" data-command="bpm_up" class="control">BPM +</button>
+                <button type="button" data-command="bpm_down" class="control">BPM −</button>
+            </div>
+
+            <div class="button-group full-width">
+                <button type="button" data-command="metronome" class="control">Toggle Metronome</button>
+            </div>
+            
+            <div id="status"></div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('#looperForm button');
+            const statusEl = document.getElementById('status');
+            
+            function sendCommand(command) {
+                const data = `command=${encodeURIComponent(command)}`;
+                if (navigator.sendBeacon) {
+                    const blob = new Blob([data], { type: 'application/x-www-form-urlencoded' });
+                    navigator.sendBeacon(window.location.href, blob);
+                } else {
+                    fetch(window.location.href, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                        body: data,
+                        keepalive: true
+                    }).catch(error => console.error(error));
+                }
+            }
+
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const command = this.getAttribute('data-command');
+                    // Immediate visual feedback (toggle state applied instantly for toggle commands)
+                    if (command === 'metronome' || command.startsWith('toggle')) {
+                        this.classList.toggle('active');
+                    } else {
+                        this.classList.add('active');
+                        setTimeout(() => this.classList.remove('active'), 100);
+                    }
+                    sendCommand(command);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
