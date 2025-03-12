@@ -1,6 +1,6 @@
 import time
 import threading
-from loopstation import LoopStation
+from looper.loopstation import LoopStation
 from gpiozero import Button, LED
 
 def gpio_control(loop_station):
